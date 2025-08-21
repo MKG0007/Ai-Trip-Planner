@@ -1,22 +1,34 @@
-import { useState } from "react";
-import { Globe2, Loader2 } from "lucide-react";
+import { Globe2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-function FinalUi({ viewTrip , disabled}: any) {
+
+function FinalUi({ viewTrip, disabled }: any) {
   return (
-    <div className="flex flex-col items-center justify-center mt-6 p-6 bg-white rounded">
-      <Globe2 className="text-primary text-4xl animate-bounce" />
-      <h2 className="mt-3 text-lg font-semibold text-primary">
+    <div className="flex flex-col items-center justify-center mt-6 p-4 sm:p-6 bg-white rounded-2xl shadow-md gap-4">
+      
+      {/* Animated Globe Icon */}
+      <Globe2 className="text-primary text-3xl sm:text-4xl animate-bounce" />
+      
+      {/* Heading */}
+      <h2 className="mt-2 sm:mt-3 text-base sm:text-lg font-semibold text-primary text-center">
         ✈️ Planning your dream trip...
       </h2>
-      <p className="text-gray-500 text-sm text-center mt-1">
+      
+      {/* Subtext */}
+      <p className="text-gray-500 text-xs sm:text-sm text-center">
         Gathering best destinations, activities, and travel details for you.
       </p>
-      <Button disabled={disabled} onClick={viewTrip}>View Trip</Button>
-      {/* <div className="w-48 h-2 bg-gray-200 rounded-full mt-4 overflow-hidden">
-        <div className="h-2 bg-primary animate-pulse w-3/4"></div>
-      </div> */}
+      
+      {/* View Trip Button */}
+      <Button
+        disabled={disabled}
+        onClick={viewTrip}
+        className="mt-2 sm:mt-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl"
+      >
+        View Trip
+      </Button>
+
     </div>
-  )
+  );
 }
 
-export default FinalUi
+export default FinalUi;

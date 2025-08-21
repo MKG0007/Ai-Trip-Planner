@@ -75,7 +75,7 @@ export default function AboutPage() {
         <p className="mt-2 text-muted-foreground">
           Let WayQuest craft the perfect itinerary for your journey.
         </p>
-        <Link href="/plan">
+        <Link href="/create-new-trip">
           <Button size="lg" className="mt-6 px-8 py-6 text-lg rounded-xl">
             Start Planning
           </Button>
