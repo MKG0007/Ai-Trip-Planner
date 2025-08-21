@@ -1,9 +1,26 @@
+
+
+
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { aj } from "../arcjet/route";
+import arcjet, { tokenBucket } from "@arcjet/next";
 import { currentUser } from "@clerk/nextjs/server";
 
-// Initialize Gemini client
+// ✅ Initialize Arcjet directly here
+const aj = arcjet({
+  key: process.env.ARCJET_KEY!, // Get your site key from https://app.arcjet.com
+  rules: [
+    tokenBucket({
+      mode: "LIVE", // will block requests. Use "DRY_RUN" to log only
+      characteristics: ["userId"], // track requests by a custom user ID
+      refillRate: 5, // refill 5 tokens per interval
+      interval: 10, // refill every 10 seconds
+      capacity: 10, // bucket maximum capacity of 10 tokens
+    }),
+  ],
+});
+
+// ✅ Initialize Gemini client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const PROMPT = `
@@ -30,7 +47,6 @@ Output Rules:
 - If user input is unclear, ask again but always keep JSON format.
 - IMPORTANT: Never output plain text outside the JSON object.
 `;
-
 
 
 const FINAL_PROMPT = `
@@ -86,11 +102,15 @@ Output Schema:
 }
 `;
 
-
 export async function POST(req: NextRequest) {
   const { messages, isFinal } = await req.json();
   const user = await currentUser();
-  const decision = await aj.protect(req, { userId:user?.primaryEmailAddress?.emailAddress??'', requested: isFinal? 5 : 0 });
+
+  // ✅ Use Arcjet for rate limiting
+  const decision = await aj.protect(req, {
+    userId: user?.primaryEmailAddress?.emailAddress ?? "",
+    requested: isFinal ? 5 : 0,
+  });
   console.log(decision);
 
   try {

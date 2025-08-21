@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
+
 import { Textarea } from '@/components/ui/textarea'
 import { ArrowDown, Globe2, Send , Plane, Hotel, Umbrella } from 'lucide-react'
 import HeroVideoDialog from '@/components/magicui/hero-video-dialog'
-import { TextAnimate } from '@/components/magicui/text-animate'
+
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 
@@ -49,17 +49,13 @@ function Hero() {
         <h1 className="text-3xl md:text-6xl font-extrabold leading-tight">
           Hey, I'm your personal{' '}
           <span className="text-primary">
-            <TextAnimate animation="blurInUp" by="character" once>
               AI Trip Planner
-            </TextAnimate>
           </span>
         </h1>
         
         <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto">
-          <TextAnimate animation="blurInUp" by="character" once>
             Tell me what you want, and I'll handle the rest: Flights, Hotels, Trip
             Planning — all in seconds.
-          </TextAnimate>
         </p>
 
         {/* Input box */}
@@ -81,14 +77,14 @@ function Hero() {
   }}
           />
 
-          <Button
-            size="lg"
+          <button
+            // size="lg"
             className="absolute bottom-6 right-6 rounded-full shadow-lg bg-primary hover:bg-primary/90 
             text-white px-6 py-6 transition-transform hover:scale-110"
             onClick={onSend}
           >
             <Send className="h-5 w-5" />
-          </Button>
+          </button>
         </div>
 
         {/* Suggestions */}
