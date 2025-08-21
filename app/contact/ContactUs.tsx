@@ -31,7 +31,7 @@ function ContactUs() {
     // Replace with your EmailJS credentials
     const serviceId = 'service_q4bquxy'
     const templateId = 'template_k3rvz3j'
-    const publicKey = '4ZC9CRC7zFfWQrdMDUIBv'
+    const publicKey = 'OqjSme7R7lGzlCcWm'
 
     emailjs
       .send(serviceId, templateId, formData, publicKey)
