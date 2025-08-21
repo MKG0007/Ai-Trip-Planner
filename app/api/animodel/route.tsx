@@ -3,22 +3,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import arcjet, { tokenBucket } from "@arcjet/next";
 import { currentUser } from "@clerk/nextjs/server";
-
-// ✅ Initialize Arcjet directly here
-const aj = arcjet({
-  key: process.env.ARCJET_KEY!, // Get your site key from https://app.arcjet.com
-  rules: [
-    tokenBucket({
-      mode: "LIVE", // will block requests. Use "DRY_RUN" to log only
-      characteristics: ["userId"], // track requests by a custom user ID
-      refillRate: 5, // refill 5 tokens per interval
-      interval: 10, // refill every 10 seconds
-      capacity: 10, // bucket maximum capacity of 10 tokens
-    }),
-  ],
-});
 
 // ✅ Initialize Gemini client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -106,13 +91,6 @@ export async function POST(req: NextRequest) {
   const { messages, isFinal } = await req.json();
   const user = await currentUser();
 
-  // ✅ Use Arcjet for rate limiting
-  const decision = await aj.protect(req, {
-    userId: user?.primaryEmailAddress?.emailAddress ?? "",
-    requested: isFinal ? 5 : 0,
-  });
-  console.log(decision);
-
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
@@ -124,9 +102,8 @@ export async function POST(req: NextRequest) {
           parts: [{ text: m.content }],
         })),
       ],
-      // 👇 Force JSON output
       generationConfig: {
-        responseMimeType: "application/json",
+        responseMimeType: "application/json", // Force JSON output
       },
     });
 
@@ -136,8 +113,8 @@ export async function POST(req: NextRequest) {
     let parsed;
     try {
       parsed = JSON.parse(responseText);
-    } catch (err) {
-      // 👇 fallback: wrap in schema instead of throwing error
+    } catch {
+      // fallback: wrap in schema instead of throwing error
       parsed = {
         resp: responseText,
         ui: "null",
