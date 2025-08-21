@@ -29,9 +29,9 @@ function ContactUs() {
     setError(null)
 
     // Replace with your EmailJS credentials
-    const serviceId = 'your_service_id'
-    const templateId = 'your_template_id'
-    const publicKey = 'your_public_key'
+    const serviceId = 'service_q4bquxy'
+    const templateId = 'template_k3rvz3j'
+    const publicKey = '4ZC9CRC7zFfWQrdMDUIBv'
 
     emailjs
       .send(serviceId, templateId, formData, publicKey)
