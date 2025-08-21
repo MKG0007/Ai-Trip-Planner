@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// ✅ Hook to handle clicks outside
+// ✅ Hook for outside click
 function useOutsideClick(
   ref: React.RefObject<HTMLElement | null>,
   handler: () => void
@@ -39,7 +39,6 @@ export default function AppleCardsCarousel({
   const [open, setOpen] = useState(false);
 
   const handleClose = () => setOpen(false);
-
   useOutsideClick(containerRef, handleClose);
 
   useEffect(() => {
@@ -51,7 +50,7 @@ export default function AppleCardsCarousel({
   return (
     <div
       ref={containerRef}
-      className="relative flex space-x-6 overflow-x-auto p-10 
+      className="relative flex space-x-4 sm:space-x-6 overflow-x-auto px-4 sm:px-6 md:px-10 
                  bg-gradient-to-br from-white via-gray-50 to-gray-100 
                  dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900 
                  rounded-2xl shadow-xl scrollbar-hide"
@@ -59,14 +58,15 @@ export default function AppleCardsCarousel({
       {items.map((card, i) => (
         <div
           key={i}
-          className="flex flex-col w-[320px] md:w-[380px] h-[420px] md:h-[460px] 
+          className="flex flex-col flex-shrink-0 w-[260px] sm:w-[300px] md:w-[340px] lg:w-[380px] 
+                     h-[380px] sm:h-[420px] md:h-[460px] 
                      bg-white dark:bg-neutral-800 rounded-2xl 
                      shadow-md hover:shadow-2xl 
                      transform hover:scale-105 transition-all duration-300 ease-out
-                     p-6"
+                     p-4 sm:p-6"
         >
           {/* Image wrapper */}
-          <div className="w-full h-48 overflow-hidden rounded-xl">
+          <div className="w-full h-40 sm:h-48 overflow-hidden rounded-xl">
             <img
               src={card.src}
               alt={card.category}
@@ -74,10 +74,12 @@ export default function AppleCardsCarousel({
             />
           </div>
 
-          {/* Content wrapper */}
-          <div className="flex flex-col flex-1 justify-between mt-4 text-center">
-            <h3 className="text-lg font-semibold">{card.category}</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
+          {/* Content */}
+          <div className="flex flex-col flex-1 justify-between mt-3 sm:mt-4 text-center">
+            <h3 className="text-base sm:text-lg font-semibold line-clamp-1">
+              {card.category}
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
               {card.title}
             </p>
           </div>
