@@ -14,19 +14,20 @@ export const CreateNewUser = mutation({
       .filter((q) => q.eq(q.field("email"), args.email))
       .collect();
 
-    if (existingUsers.length > 0) {
+      
+      // Insert new user
+      if(existingUsers?.length == 0){
+        
+        const insertedId = await ctx.db.insert("UserTable", {
+          name: args.name,
+          email: args.email,
+          imageUrl: args.imageUrl,
+        });
+        const newUser = await ctx.db.get(insertedId);
+        return newUser;
+      }
+      
+      // Fetch the newly inserted document to return consistent format
       return existingUsers[0];
-    }
-
-    // Insert new user
-    const insertedId = await ctx.db.insert("UserTable", {
-      name: args.name,
-      email: args.email,
-      imageUrl: args.imageUrl,
-    });
-
-    // Fetch the newly inserted document to return consistent format
-    const newUser = await ctx.db.get(insertedId);
-    return newUser;
   },
 });
