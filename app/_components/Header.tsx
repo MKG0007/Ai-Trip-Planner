@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs"
 import Image from 'next/image'
 import React, { useState } from 'react'
-import { SignInButton, useUser } from '@clerk/nextjs'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 
@@ -15,14 +15,14 @@ const menuOptions = [
 ]
 
 function Header() {
-  const { user } = useUser()
+  const { isSignedIn } = useUser()
   const path = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
     <header className="w-full shadow-sm bg-white fixed top-0 left-0 z-50">
       <div className="flex justify-between items-center px-4 md:px-8 py-3">
-        {/* Logo + Name */}
+        {/* Logo */}
         <div className="flex gap-2 items-center">
           <Image src="/logo.svg" alt="WayQuest Logo" width={30} height={30} />
           <h2 className="font-bold text-xl md:text-2xl">WayQuest</h2>
@@ -45,20 +45,26 @@ function Header() {
           ))}
         </nav>
 
-        {/* Auth Button (Desktop) */}
-        <div className="hidden md:block">
-          {!user ? (
+        {/* Desktop Auth Section */}
+        <div className="hidden md:flex gap-3 items-center">
+          {!isSignedIn ? (
             <SignInButton mode="modal">
               <Button>Get Started</Button>
             </SignInButton>
-          ) : path === '/create-new-trip' ? (
-            <Link href={'/my-trip'}>
-              <Button>My Trips</Button>
-            </Link>
           ) : (
-            <Link href={'/create-new-trip'}>
-              <Button>Create New Trip</Button>
-            </Link>
+            <>
+              {path === '/create-new-trip' ? (
+                <Link href={'/my-trip'}>
+                  <Button>Create New Trip</Button>
+                </Link>
+              ) : (
+                <Link href={'/create-new-trip'}>
+                  <Button>Create New Trip</Button>
+                </Link>
+              )}
+              {/* Profile avatar visible only on desktop */}
+              <UserButton afterSignOutUrl="/" />
+            </>
           )}
         </div>
 
@@ -72,7 +78,7 @@ function Header() {
         </button>
       </div>
 
-      {/* Mobile Dropdown */}
+      {/* Mobile Dropdown Menu */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t flex flex-col gap-4 px-6 py-4">
           {menuOptions.map((menu, index) => (
@@ -93,19 +99,28 @@ function Header() {
             </Link>
           ))}
 
-          {/* Auth Button (Mobile) */}
-          {!user ? (
+          {/* Mobile Auth Section */}
+          {!isSignedIn ? (
             <SignInButton mode="modal">
               <Button className="w-full">Get Started</Button>
             </SignInButton>
-          ) : path === '/create-new-trip' ? (
-            <Link href={'/my-trip'} onClick={() => setMenuOpen(false)}>
-              <Button className="w-full">My Trips</Button>
-            </Link>
           ) : (
-            <Link href={'/create-new-trip'} onClick={() => setMenuOpen(false)}>
-              <Button className="w-full">Create New Trip</Button>
-            </Link>
+            <>
+              {path === '/create-new-trip' ? (
+                <Link href={'/my-trip'} onClick={() => setMenuOpen(false)}>
+                  <Button className="w-full">My Trips</Button>
+                </Link>
+              ) : (
+                <Link href={'/create-new-trip'} onClick={() => setMenuOpen(false)}>
+                  <Button className="w-full">Create New Trip</Button>
+                </Link>
+              )}
+
+              {/* Profile avatar visible only on mobile */}
+              <div className="flex justify-center pt-2">
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            </>
           )}
         </div>
       )}
