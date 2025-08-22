@@ -55,7 +55,7 @@ function Header() {
             <>
               {path === '/create-new-trip' ? (
                 <Link href={'/my-trip'}>
-                  <Button>Create New Trip</Button>
+                  <Button>My Trips</Button>
                 </Link>
               ) : (
                 <Link href={'/create-new-trip'}>
