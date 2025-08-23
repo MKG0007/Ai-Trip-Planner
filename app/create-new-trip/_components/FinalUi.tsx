@@ -10,12 +10,14 @@ function FinalUi({ viewTrip, disabled }: any) {
       
       {/* Heading */}
       <h2 className="mt-2 sm:mt-3 text-base sm:text-lg font-semibold text-primary text-center">
-        ✈️ Planning your dream trip...
+         {disabled ? "✈️ Planning your dream trip..." : "✅ Your trip is ready!"}
       </h2>
       
       {/* Subtext */}
       <p className="text-gray-500 text-xs sm:text-sm text-center">
-        Gathering best destinations, activities, and travel details for you.
+        {disabled
+          ? "Gathering best destinations, activities, and travel details for you."
+          : "Everything is set. Click below to view your trip details."}
       </p>
       
       {/* View Trip Button */}
@@ -24,7 +26,9 @@ function FinalUi({ viewTrip, disabled }: any) {
         onClick={viewTrip}
         className="mt-2 sm:mt-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl"
       >
+        <a herf = "/my-trip">
         View Trip
+        </a>
       </Button>
 
     </div>
