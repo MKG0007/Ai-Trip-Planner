@@ -26,7 +26,7 @@ function FinalUi({ viewTrip, disabled }: any) {
         onClick={viewTrip}
         className="mt-2 sm:mt-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl"
       >
-        <a herf = "/my-trip">
+        <a href = "/my-trip">
         View Trip
         </a>
       </Button>
