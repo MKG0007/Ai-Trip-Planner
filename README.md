@@ -41,7 +41,7 @@ With **AI recommendations, interactive maps, and smart scheduling**, this projec
 ---
 
 ## 📸 Screenshots
-![Homepage]()
+![Homepage](wayquest.png)
 
 > You can also create a short demo video and link it here for recruiters/users.
 
