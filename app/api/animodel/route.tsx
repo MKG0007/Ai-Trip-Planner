@@ -86,44 +86,54 @@ Output Schema:
   }
 }
 `;
-
 export async function POST(req: NextRequest) {
-  const { messages, isFinal } = await req.json();
-  const user = await currentUser();
-
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // 1. Parse request and check Auth
+    const { messages, isFinal } = await req.json();
+    const user = await currentUser();
 
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 2. Initialize Model with System Instructions (Cleaner than injecting into history)
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: isFinal ? FINAL_PROMPT : PROMPT,
+    });
+
+    // 3. FIX: Map roles correctly (assistant -> model)
+    // Gemini will throw a 500/400 error if it sees "assistant"
+    const formattedHistory = messages.map((m: any) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+
+    // 4. Generate Content with JSON enforcement
     const result = await model.generateContent({
-      contents: [
-        { role: "user", parts: [{ text: isFinal ? FINAL_PROMPT : PROMPT }] },
-        ...messages.map((m: any) => ({
-          role: m.role,
-          parts: [{ text: m.content }],
-        })),
-      ],
+      contents: formattedHistory,
       generationConfig: {
-        responseMimeType: "application/json", // Force JSON output
+        responseMimeType: "application/json",
       },
     });
 
     const responseText = result.response.text().trim();
-    console.log("Gemini raw output:", responseText);
-
-    let parsed;
+    
+    // 5. Safe Parsing
     try {
-      parsed = JSON.parse(responseText);
-    } catch {
-      // fallback: wrap in schema instead of throwing error
-      parsed = {
+      const parsed = JSON.parse(responseText);
+      return NextResponse.json(parsed);
+    } catch (parseError) {
+      console.error("JSON Parse Error. Raw text:", responseText);
+      return NextResponse.json({
         resp: responseText,
-        ui: "null",
-      };
+        ui: isFinal ? "final" : "null",
+      });
     }
 
-    return NextResponse.json(parsed);
   } catch (e: any) {
-    console.error("Gemini API Error:", e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    // This will now catch the ACTUAL Gemini error (like invalid API key or Quota)
+    console.error("Gemini API Error:", e.message);
+    return NextResponse.json({ error: "Internal Server Error", details: e.message }, { status: 500 });
   }
 }
