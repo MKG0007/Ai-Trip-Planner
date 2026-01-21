@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { currentUser } from "@clerk/nextjs/server";
 
-// ✅ Initialize Gemini client
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const PROMPT = `
@@ -88,52 +88,53 @@ Output Schema:
 `;
 export async function POST(req: NextRequest) {
   try {
-    // 1. Parse request and check Auth
     const { messages, isFinal } = await req.json();
-    const user = await currentUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // 2. Initialize Model with System Instructions (Cleaner than injecting into history)
+    
+  
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash-lite", 
       systemInstruction: isFinal ? FINAL_PROMPT : PROMPT,
     });
 
-    // 3. FIX: Map roles correctly (assistant -> model)
-    // Gemini will throw a 500/400 error if it sees "assistant"
-    const formattedHistory = messages.map((m: any) => ({
+    
+    const chatHistory = messages.map((m: any) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
     }));
 
-    // 4. Generate Content with JSON enforcement
-    const result = await model.generateContent({
-      contents: formattedHistory,
+    
+    const lastMessage = chatHistory.pop();
+
+    if (!lastMessage) {
+        return NextResponse.json({ error: "No messages provided" }, { status: 400 });
+    }
+
+    
+    const chat = model.startChat({
+      history: chatHistory,
       generationConfig: {
         responseMimeType: "application/json",
       },
     });
 
+    const result = await chat.sendMessage(lastMessage.parts[0].text);
     const responseText = result.response.text().trim();
-    
-    // 5. Safe Parsing
+
+    let parsed;
     try {
-      const parsed = JSON.parse(responseText);
-      return NextResponse.json(parsed);
-    } catch (parseError) {
-      console.error("JSON Parse Error. Raw text:", responseText);
-      return NextResponse.json({
+      parsed = JSON.parse(responseText);
+    } catch {
+      parsed = {
         resp: responseText,
-        ui: isFinal ? "final" : "null",
-      });
+        ui: "null",
+      };
     }
 
+    return NextResponse.json(parsed);
+
   } catch (e: any) {
-    // This will now catch the ACTUAL Gemini error (like invalid API key or Quota)
-    console.error("Gemini API Error:", e.message);
-    return NextResponse.json({ error: "Internal Server Error", details: e.message }, { status: 500 });
+    console.error("Gemini API Error:", e);
+    // return the error
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
