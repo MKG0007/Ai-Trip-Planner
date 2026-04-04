@@ -16,7 +16,7 @@ import { api } from '@/convex/_generated/api'
 import { userUserDetail, useTripDetail } from '@/app/Provider'
 import { useSearchParams } from 'next/navigation'
 
-type Message = {
+export type Message = {
   role: string
   content: string
   ui?: string
@@ -69,48 +69,84 @@ function ChatBox() {
   const [isFinal, setIsFinal] = useState(false)
   const [loading, setLoading] = useState(false)
   const [tripDetail, setTripDetail] = useState<TripInfo>()
+  
   const SaveTripDetail = useMutation(api.tripDetail.CreateTripDetail)
   const { tripDetailInfo, setTripDetailInfo } = useTripDetail()
   const { userDetail } = userUserDetail()
 
+  // 1. Handles the standard conversational back-and-forth
   const onSend = async () => {
     if (!userInput.trim()) return
     setLoading(true)
+    const currentInput = userInput // Capture exact input before clearing
     setUserInput('')
 
-    const newMsg: Message = { role: 'user', content: userInput }
-    setMessages(prev => [...prev, newMsg])
+    const newMsg: Message = { role: 'user', content: currentInput }
+    const updatedMessages = [...messages, newMsg]
+    setMessages(updatedMessages)
 
     try {
       const result = await axios.post('/api/animodel', {
-        messages: [...messages, newMsg],
-        isFinal,
+        messages: updatedMessages,
+        isFinal: false, // Standard chat is always false
       })
 
-      if (!isFinal) {
-        setMessages(prev => [
-          ...prev,
-          { role: 'assistant', content: result?.data?.resp, ui: result?.data?.ui },
-        ])
-      }
-
-      if (isFinal) {
-        setTripDetail(result?.data?.trip_plan)
-        setTripDetailInfo(result?.data?.trip_plan)
-
-        const tripId = uuidv4()
-        await SaveTripDetail({
-          tripDetail: result?.data?.trip_plan,
-          tripId,
-          uid: userDetail?._id,
-        })
-      }
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: result?.data?.resp, ui: result?.data?.ui },
+      ])
     } catch (error) {
       console.error('Gemini API error:', error)
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
+
+  // 2. Dedicated function for the final heavy-lifting API call
+  const generateFinalTripPlan = async (currentMessages: Message[]) => {
+    setLoading(true)
+    
+    // Visually confirm to the user that generation is starting
+    const confirmationMsg: Message = { role: 'user', content: 'Ok, Great! Please generate my trip.' }
+    const finalMessages = [...currentMessages, confirmationMsg]
+    setMessages(finalMessages)
+
+    try {
+      const result = await axios.post('/api/animodel', {
+        messages: finalMessages,
+        isFinal: true, // Force the heavy JSON prompt
+      })
+
+      if (result?.data?.trip_plan) {
+        setTripDetail(result.data.trip_plan)
+        setTripDetailInfo(result.data.trip_plan)
+
+        // Only attempt to save to Convex if the user is authenticated
+        if (userDetail?._id) {
+          const tripId = uuidv4()
+          await SaveTripDetail({
+            tripDetail: result.data.trip_plan,
+            tripId,
+            uid: userDetail._id,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Gemini API error during final generation:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 3. Effect watcher triggers the final generation safely
+  useEffect(() => {
+    const lastMsg = messages[messages.length - 1]
+    
+    if (lastMsg?.ui === 'final' && !isFinal) {
+      setIsFinal(true)
+      generateFinalTripPlan(messages)
+    }
+  }, [messages, isFinal])
 
   const RenderGenerativeUi = (ui: string) => {
     switch (ui) {
@@ -126,18 +162,6 @@ function ChatBox() {
         return null
     }
   }
-
-  useEffect(() => {
-    const lastMsg = messages[messages.length - 1]
-    if (lastMsg?.ui === 'final') {
-      setIsFinal(true)
-      setUserInput('Ok, Great!')
-    }
-  }, [messages])
-
-  useEffect(() => {
-    if (isFinal && userInput) onSend()
-  }, [isFinal])
 
   return (
     <div className="flex flex-col h-[70vh] sm:h-[75vh] md:h-[84vh] border shadow-md rounded-2xl p-3 sm:p-4 bg-white/80 backdrop-blur-sm">
@@ -192,12 +216,14 @@ function ChatBox() {
               }
             }}
             value={userInput}
+            disabled={isFinal && loading} // Prevent typing while generating final trip
           />
           <Button
             size="lg"
             className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 md:bottom-5 md:right-5 rounded-full 
                        shadow-lg bg-primary hover:bg-primary/90 text-white p-2 sm:p-3 md:p-4 transition-transform hover:scale-105"
             onClick={onSend}
+            disabled={isFinal && loading}
           >
             <Send className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
           </Button>
